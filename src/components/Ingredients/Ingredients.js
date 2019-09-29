@@ -14,13 +14,23 @@ const Ingredients = () => {
     );
   }
 
+  const removeIngredientHandler = (ingredientId) => {
+    // Anderchen Solution in the comments
+    // const filterIngredients = userIngredients.filter(ingredient => ingredient.id !== ingredientId)
+    // setUserIngredients(filterIngredients)
+    setUserIngredients(prevIngredients => 
+      prevIngredients.filter(
+        (ingredient) => ingredient.id !== ingredientId)
+      )
+  }
+
   return (
     <div className="App">
       <IngredientForm onAddIngredient={addIngredientHandler}/>
 
       <section>
         <Search />
-        <IngredientList ingredients={userIngredients} onRemoveItem={() => {}} />
+        <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
       </section>
     </div>
   );
