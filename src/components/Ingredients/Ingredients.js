@@ -18,11 +18,27 @@ const ingredientReducer = (currentIngredients, action) => {
   };
 };
 
+const httpReducer = (httpState, action) => {
+  switch(action.type) {
+    case 'SEND':
+      return {loading: true, error: null};
+    case 'RESPONSE':
+        return {...httpState, loading: false};
+    case 'ERROR':
+        return {loading: false, error: action.errorMessage};
+    case 'CLEAR':
+        return {...httpState, error: null};
+    default: 
+      throw new Error('Should not be reached!')
+  };
+};
+
 const Ingredients = () => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, [])
   // const [ userIngredients, setUserIngredients ] = useState([]);
-  const [ isLoading, setIsLoading ] = useState(false);
-  const [ error, setError ] = useState();
+  // const [ isLoading, setIsLoading ] = useState(false);
+  // const [ error, setError ] = useState();
+  const [httpState, dispatchHttp] = useReducer(httpReducer, {loading: false, error: null})
 
   // Already fetching in the Search Component
   // useEffect(() => {
@@ -47,13 +63,14 @@ const Ingredients = () => {
   }, []);
 
   const addIngredientHandler = ingredient => {
-    setIsLoading(true);
+    // setIsLoading(true);
+    dispatchHttp({type: 'SEND'});
     fetch('https://react-hooks-update-be740.firebaseio.com/ingredients.json', {
       method: 'POST',
       body: JSON.stringify(ingredient),
       headers: { 'Content-Type': 'application/json' }
     }).then(response => {
-      setIsLoading(false);
+      dispatchHttp({type: 'RESPONSE'})
       return response.json();
     }).then(responseData => {
       // setUserIngredients(prevIngredients => 
@@ -68,32 +85,33 @@ const Ingredients = () => {
     // Anderchen Solution in the comments
     // const filterIngredients = userIngredients.filter(ingredient => ingredient.id !== ingredientId)
     // setUserIngredients(filterIngredients)
-    setIsLoading(true)
+    dispatchHttp({type: 'SEND'});
     fetch(`https://react-hooks-update-be740.firebaseio.com/ingredients/${ingredientId}.json`, {
       method: 'DELETE',
     }).then(response => {
-      setIsLoading(false)
+      dispatchHttp({type: 'RESPONSE'})
       // setUserIngredients(prevIngredients => 
       //   prevIngredients.filter(
       //     (ingredient) => ingredient.id !== ingredientId)
       // )
       dispatch({type: 'DELETE', id: ingredientId});
     }).catch(error => {
-      setError(error.message)
-      setIsLoading(false);
+      // setError(error.message)
+      // setIsLoading(false);
+      dispatchHttp({type: 'ERROR', errorMessage: error.message})
     });
   }
 
   const clearError = () => {
-    setError(null);
+    dispatch({type: 'CLEAR'})
   };
 
   return (
     <div className="App">
-    {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
+    {httpState.error && <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>}
       <IngredientForm 
         onAddIngredient={addIngredientHandler}
-        loading={isLoading}
+        loading={httpState.loading}
         />
 
       <section>
