@@ -47,10 +47,15 @@ const Ingredients = () => {
     // Anderchen Solution in the comments
     // const filterIngredients = userIngredients.filter(ingredient => ingredient.id !== ingredientId)
     // setUserIngredients(filterIngredients)
-    setUserIngredients(prevIngredients => 
-      prevIngredients.filter(
-        (ingredient) => ingredient.id !== ingredientId)
+
+    fetch(`https://react-hooks-update-be740.firebaseio.com/ingredients/${ingredientId}.json`, {
+      method: 'DELETE',
+    }).then(response => {
+      setUserIngredients(prevIngredients => 
+        prevIngredients.filter(
+          (ingredient) => ingredient.id !== ingredientId)
       )
+    })
   }
 
   return (
