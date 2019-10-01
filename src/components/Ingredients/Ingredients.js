@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useReducer, useMemo } from 'react';
+import React, { useEffect, useCallback, useReducer, useMemo } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -22,7 +22,7 @@ const ingredientReducer = (currentIngredients, action) => {
 const Ingredients = () => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, [])
   
-  const { isLoading, error, data, sendRequest, reqExtra, reqIdentifier } = useHttp();
+  const { isLoading, error, data, sendRequest, reqExtra, reqIdentifier, clear } = useHttp();
 
   useEffect(() => {
     if(!isLoading && !error && reqIdentifier === 'REMOVE_INGREDIENT') {
@@ -43,24 +43,12 @@ const Ingredients = () => {
       JSON.stringify(ingredient),
       ingredient,
       'ADD_INGREDIENT'
-    ); 
-
-    // dispatchHttp({type: 'SEND'});
-    // fetch('https://react-hooks-update-be740.firebaseio.com/ingredients.json', {
-    //   method: 'POST',
-    //   body: JSON.stringify(ingredient),
-    //   headers: { 'Content-Type': 'application/json' }
-    // }).then(response => {
-    //   dispatchHttp({type: 'RESPONSE'})
-    //   return response.json();
-    // }).then(responseData => {
-    //   dispatch({type: 'ADD', ingredient: {id: responseData.name, ...ingredient}});
-    // });  
-  }, [])
+    );   
+  }, [sendRequest])
 
   const removeIngredientHandler = useCallback(ingredientId => {
     sendRequest(
-      `https://react-hooks-update-be740.firebaseio.com/${ingredientId}.json`,
+      `https://react-hooks-update-be740.firebaseio.com/ingredients/${ingredientId}.json`,
       'DELETE',
       null,
       ingredientId,
@@ -68,9 +56,6 @@ const Ingredients = () => {
     );
   }, [sendRequest]);
 
-  const clearError = useCallback(() => {
-    dispatch({type: 'CLEAR'})
-  }, []);
 
   const ingredientList = useMemo(() => {
     return (
@@ -80,7 +65,7 @@ const Ingredients = () => {
 
   return (
     <div className="App">
-    {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
+    {error && <ErrorModal onClose={clear}>{error}</ErrorModal>}
       <IngredientForm 
         onAddIngredient={addIngredientHandler}
         loading={isLoading}
