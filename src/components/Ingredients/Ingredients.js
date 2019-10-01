@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useReducer } from 'react';
+import React, { useState, useCallback, useReducer, useMemo } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList';
@@ -35,35 +35,15 @@ const httpReducer = (httpState, action) => {
 
 const Ingredients = () => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, [])
-  // const [ userIngredients, setUserIngredients ] = useState([]);
-  // const [ isLoading, setIsLoading ] = useState(false);
-  // const [ error, setError ] = useState();
   const [httpState, dispatchHttp] = useReducer(httpReducer, {loading: false, error: null})
 
-  // Already fetching in the Search Component
-  // useEffect(() => {
-  //   fetch('https://react-hooks-update-be740.firebaseio.com/ingredients.json')
-  //     .then(response => response.json())
-  //     .then(responseData => {
-  //       const loadedIngredients = [];
-  //       for (const key in responseData) {
-  //         loadedIngredients.push({
-  //           id: key,
-  //           title: responseData[key].title,
-  //           amount: responseData[key].amount
-  //         });
-  //       }
-  //       setUserIngredients(loadedIngredients);
-  //     });
-  // }, []);
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
-    // setUserIngredients(filteredIngredients)
+
     dispatch({type: 'SET', ingredients: filteredIngredients});
   }, []);
 
-  const addIngredientHandler = ingredient => {
-    // setIsLoading(true);
+  const addIngredientHandler = useCallback(ingredient => {
     dispatchHttp({type: 'SEND'});
     fetch('https://react-hooks-update-be740.firebaseio.com/ingredients.json', {
       method: 'POST',
@@ -73,38 +53,31 @@ const Ingredients = () => {
       dispatchHttp({type: 'RESPONSE'})
       return response.json();
     }).then(responseData => {
-      // setUserIngredients(prevIngredients => 
-      //   [...prevIngredients, 
-      //   { id: responseData.name, ...ingredient }]
-      // );
       dispatch({type: 'ADD', ingredient: {id: responseData.name, ...ingredient}});
     });
-  }
+  }, [])
 
-  const removeIngredientHandler = (ingredientId) => {
-    // Anderchen Solution in the comments
-    // const filterIngredients = userIngredients.filter(ingredient => ingredient.id !== ingredientId)
-    // setUserIngredients(filterIngredients)
+  const removeIngredientHandler = useCallback(ingredientId => {
     dispatchHttp({type: 'SEND'});
     fetch(`https://react-hooks-update-be740.firebaseio.com/ingredients/${ingredientId}.json`, {
       method: 'DELETE',
     }).then(response => {
       dispatchHttp({type: 'RESPONSE'})
-      // setUserIngredients(prevIngredients => 
-      //   prevIngredients.filter(
-      //     (ingredient) => ingredient.id !== ingredientId)
-      // )
       dispatch({type: 'DELETE', id: ingredientId});
     }).catch(error => {
-      // setError(error.message)
-      // setIsLoading(false);
       dispatchHttp({type: 'ERROR', errorMessage: error.message})
     });
-  }
+  }, []);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatch({type: 'CLEAR'})
-  };
+  }, []);
+
+  const ingredientList = useMemo(() => {
+    return (
+      <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
+    );
+  }, [userIngredients, removeIngredientHandler]);
 
   return (
     <div className="App">
@@ -116,7 +89,7 @@ const Ingredients = () => {
 
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler} />
-        <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
+        {ingredientList}
       </section>
     </div>
   );
